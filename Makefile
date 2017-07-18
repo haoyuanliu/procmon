@@ -1,8 +1,10 @@
-target=procmon
 object=procmon.o
+target=procmon
 CXXFLAGS=-g
-CPP=g++ -g -o
-&(targer):$(object)
-    $(CPP) $@ $^ -lpthread
+GCC=g++ -g
+IFCGI=-I /usr/local/include
+LFCGI=/usr/local/lib/libfcgi.a
+$(target) : $(object)
+	$(GCC) -o $@ $^ $(IFCGI) -lpthread $(LFCGI)
 clean:
-      rm -rf procmon.o procmon
+	rm -rf $(target) $(object)
