@@ -15,29 +15,32 @@ using namespace std;
 
 void *work_thread(void *arg) {
     int threadid = *(static_cast<int*>(arg));
+    int ret = 0;
+    int count= 0;
+    FCGX_Request httpReq;
+    FCGX_InitRequest(&httpReq, 0, 0);
     while(1) {
-        int ret = 0;
-        int count = 0;
-        FCGX_Request httpReq;
-        FCGX_InitRequest(&httpReq, 0, 0);
         ret = FCGX_Accept_r(&httpReq);
         if (ret >= 0) {
             struct timeval time;
             gettimeofday(&time, NULL);
             string response("This is the ");
-            response.append(Util::transToString(count));
+            response.append(Util::transToString(++count));
             response.append(" time of visit!");
-            string httpRes("Status: 200 OK\r\nContent-type: application/octet-stream\r\n");
+            string httpRes("Status: 200 OK\r\nContent-type: text/html\r\n");
 			httpRes.append("Content-Length: ").append(Util::transToString(response.size()));
             httpRes.append("\r\n\r\n");
             httpRes.append(response);
             FCGX_PutStr(httpRes.c_str(), httpRes.size(), httpReq.out);
+            FCGX_Finish_r(&httpReq);
+        } else {
+            break;
         }
     }
 }
 
 int main() {
-    int work_num = 2;
+    int work_num = 10;
 #if 0
     sigset_t mask;
     struct sigaction sa;
