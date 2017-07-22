@@ -2,13 +2,11 @@
 #define DFBUFLEN 1024
 
 CycleBuffer::CycleBuffer() : buffer_(DFBUFLEN){
-    readIndex_ = 0;
     writeIndex_ = 0;
     pthread_mutex_init(&mutex_, NULL);
 }
 
 CycleBuffer::CycleBuffer(int len) : buffer_(len){
-    readIndex_ = 0;
     writeIndex_ = 0;
     pthread_mutex_init(&mutex_, NULL);
 }
@@ -21,14 +19,14 @@ size_t CycleBuffer::getSize() {
     return buffer_.size();
 }
 
-size_t CycleBuffer::getRead() {
+size_t CycleBuffer::getReadIndex() {
     pthread_mutex_lock(&mutex_);
-    size_t res = readIndex_;
+    size_t res = writeIndex_;
     pthread_mutex_unlock(&mutex_);
     return res;
 }
 
-size_t CycleBuffer::getWrite() {
+size_t CycleBuffer::getWriteIndex() {
     pthread_mutex_lock(&mutex_);
     size_t res = writeIndex_;
     pthread_mutex_unlock(&mutex_);

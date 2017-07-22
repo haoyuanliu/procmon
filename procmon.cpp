@@ -18,10 +18,11 @@
 
 #include "util.h"
 #include "CycleBuffer.h"
+#include "StatData.h"
 using namespace std;
 
 //全局变量，保存buffer信息
-#define LISTENPID 22
+#define LISTENPID 4687
 #define BUFFLEN 600
 CycleBuffer *cputime;
 
@@ -57,7 +58,7 @@ void *work_thread(void *arg) {
             response.append(" time of visit of thread " + Util::transToString(threadid) + " !<br>");
             response.append("And tid is " + Util::transToString(gettid()) + " !");
             response.append("Server Name: " + string(server_name));
-            response.append(" Buffer pointer: " + Util::transToString(cputime->getWrite()));
+            response.append(" Buffer pointer: " + Util::transToString(cputime->getWriteIndex()));
             string httpRes("Status: 200 OK\r\nContent-type: text/html\r\n");
 			httpRes.append("Content-Length: ").append(Util::transToString(response.size()));
             httpRes.append("\r\n\r\n");
