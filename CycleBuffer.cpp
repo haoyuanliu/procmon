@@ -33,6 +33,13 @@ size_t CycleBuffer::getWriteIndex() {
     return res;
 }
 
+double CycleBuffer::getValue(size_t index) {
+    pthread_mutex_lock(&mutex_);
+    double res = buffer_[index];
+    pthread_mutex_unlock(&mutex_);
+    return res;
+}
+
 void CycleBuffer::write(double n) {
     pthread_mutex_lock(&mutex_);
     buffer_[writeIndex_] = n;

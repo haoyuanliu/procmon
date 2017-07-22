@@ -10,6 +10,7 @@ class CycleBuffer {
         size_t getSize();
         size_t getReadIndex();
         size_t getWriteIndex();
+        double getValue(size_t index);
 
         void write(double n);
     private:

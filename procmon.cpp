@@ -31,11 +31,13 @@ void *produce_thread(void *arg) {
     char buf[1024];
     int ret;
     int count = 0;
+    StatData stat_data;
     while(1) {
         if ((ret = pread(fd, buf, sizeof buf, 0)) == -1) {
             cout << "Read /proc/" << getpid() << "/stat error!" << endl;
         }
-        cputime->write(count++);
+        stat_data.parse(buf);
+        cputime->write(static_cast<double>(stat_data.pid));
         sleep(1);
     }
 }
@@ -59,6 +61,7 @@ void *work_thread(void *arg) {
             response.append("And tid is " + Util::transToString(gettid()) + " !");
             response.append("Server Name: " + string(server_name));
             response.append(" Buffer pointer: " + Util::transToString(cputime->getWriteIndex()));
+            response.append("<br>utime: " + Util::transToString(cputime->getValue(cputime->getWriteIndex())));
             string httpRes("Status: 200 OK\r\nContent-type: text/html\r\n");
 			httpRes.append("Content-Length: ").append(Util::transToString(response.size()));
             httpRes.append("\r\n\r\n");
