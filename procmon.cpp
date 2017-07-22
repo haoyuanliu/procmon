@@ -2,6 +2,9 @@
 #include <string>
 #include <pthread.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
+#define gettid() syscall(__NR_gettid)
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -9,6 +12,7 @@
 #include <fcgi_config.h>
 #include <fcgio.h>
 #include <fcgios.h>
+#include <fcgi_stdio.h>
 
 #include "util.h"
 using namespace std;
@@ -24,13 +28,18 @@ void *work_thread(void *arg) {
         if (ret >= 0) {
             struct timeval time;
             gettimeofday(&time, NULL);
+            char *server_name;
+            server_name = FCGX_GetParam("SERVER_NAME", httpReq.envp);
             string response("This is the ");
             response.append(Util::transToString(++count));
-            response.append(" time of visit!");
+            response.append(" time of visit of thread " + Util::transToString(threadid) + " !<br>");
+            response.append("And tid is " + Util::transToString(gettid()) + " !");
+            response.append("Server Name: " + string(server_name));
             string httpRes("Status: 200 OK\r\nContent-type: text/html\r\n");
 			httpRes.append("Content-Length: ").append(Util::transToString(response.size()));
             httpRes.append("\r\n\r\n");
             httpRes.append(response);
+            printf("%s\r\n", "Hello Nginx!");
             FCGX_PutStr(httpRes.c_str(), httpRes.size(), httpReq.out);
             FCGX_Finish_r(&httpReq);
         } else {
