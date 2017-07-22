@@ -22,7 +22,7 @@ using namespace std;
 
 //全局变量，保存buffer信息
 #define BUFFLEN 600
-CycleBuffer cputime;
+CycleBuffer *cputime;
 
 void *produce_thread(void *arg) {
     int fd = *(static_cast<int*>(arg));
@@ -33,7 +33,7 @@ void *produce_thread(void *arg) {
         if ((ret = pread(fd, buf, sizeof buf, 0)) == -1) {
             cout << "Read /proc/" << getpid() << "/stat error!" << endl;
         }
-        cputime.write(count++);
+        cputime->write(count++);
         sleep(1);
     }
 }
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    cputime = CycleBuffer(BUFFLEN);
+    cputime = new CycleBuffer(BUFFLEN);
 
     int pid = atoi(argv[1]);
     if (!pidExist(pid)) {
@@ -109,5 +109,6 @@ int main(int argc, char *argv[]) {
     }
 
     delete[] work_tid;
+    delete cputime;
     return 0;
 }
