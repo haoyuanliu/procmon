@@ -4,6 +4,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #define gettid() syscall(__NR_gettid)
 #include <unistd.h>
 #include <stdlib.h>
@@ -15,7 +17,26 @@
 #include <fcgi_stdio.h>
 
 #include "util.h"
+#include "CycleBuffer.h"
 using namespace std;
+
+//全局变量，保存buffer信息
+#define BUFFLEN 600
+CycleBuffer cputime;
+
+void *produce_thread(void *arg) {
+    int fd = *(static_cast<int*>(arg));
+    char buf[1024];
+    int ret;
+    int count = 0;
+    while(1) {
+        if ((ret = pread(fd, buf, sizeof buf, 0)) == -1) {
+            cout << "Read /proc/" << getpid() << "/stat error!" << endl;
+        }
+        cputime.write(count++);
+        sleep(1);
+    }
+}
 
 void *work_thread(void *arg) {
     int threadid = *(static_cast<int*>(arg));
@@ -48,27 +69,38 @@ void *work_thread(void *arg) {
     }
 }
 
-int main() {
+bool pidExist(int pid) {
+    char filename[256];
+    snprintf(filename, sizeof filename, "/proc/%d/stat", pid);
+    return ::access(filename, R_OK) == 0;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc < 3) {
+        cout << "Usage: " << argv[0] << " pid port name" << endl;
+        return 0;
+    }
+
+    cputime = CycleBuffer(BUFFLEN);
+
+    int pid = atoi(argv[1]);
+    if (!pidExist(pid)) {
+        cout << pid << " is not exist!" << endl;
+        return 0;
+    }
+
+    char filename[256];
+    snprintf(filename, sizeof filename, "/proc/%d/stat", pid);
+    int fd = open(filename, O_RDONLY);
+
+    pthread_t produce_tid;
+    pthread_create(&produce_tid, NULL, produce_thread, static_cast<void*>(&fd));
+
     int work_num = 10;
-#if 0
-    sigset_t mask;
-    struct sigaction sa;
-    sa.sa_handler = SIG_IGN;
-    sa.sa_flags = 0;
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGUSR1);
-    sa.sa_mask = mask;
-    if (sigaction(SIGPIPE, &sa, 0) == -1) {
-        exit(-1);
-    }
-    if (pthread_sigmask(SIG_BLOCK, &mask, NULL) != 0) {
-        return -1;
-    }
-#endif
     FCGX_Init();
     pthread_t *work_tid = new pthread_t[work_num];
     for (int i = 0; i < work_num; ++i) {
-        pthread_create(&work_tid[i], NULL, work_thread, (void *)&i);
+        pthread_create(&work_tid[i], NULL, work_thread, static_cast<void*>(&i));
         usleep(10);
     }
 

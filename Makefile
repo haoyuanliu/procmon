@@ -1,4 +1,4 @@
-object=procmon.o
+object=procmon.o CycleBuffer.o
 target=procmon
 CXXFLAGS=-g
 GCC=g++ -g
