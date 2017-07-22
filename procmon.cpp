@@ -21,6 +21,7 @@
 using namespace std;
 
 //全局变量，保存buffer信息
+#define LISTENPID 22
 #define BUFFLEN 600
 CycleBuffer *cputime;
 
@@ -56,6 +57,7 @@ void *work_thread(void *arg) {
             response.append(" time of visit of thread " + Util::transToString(threadid) + " !<br>");
             response.append("And tid is " + Util::transToString(gettid()) + " !");
             response.append("Server Name: " + string(server_name));
+            response.append(" Buffer pointer: " + Util::transToString(cputime->getWrite()));
             string httpRes("Status: 200 OK\r\nContent-type: text/html\r\n");
 			httpRes.append("Content-Length: ").append(Util::transToString(response.size()));
             httpRes.append("\r\n\r\n");
@@ -76,19 +78,25 @@ bool pidExist(int pid) {
 }
 
 int main(int argc, char *argv[]) {
+#if 0
     if (argc < 3) {
         cout << "Usage: " << argv[0] << " pid port name" << endl;
         return 0;
     }
 
-    cputime = new CycleBuffer(BUFFLEN);
 
     int pid = atoi(argv[1]);
     if (!pidExist(pid)) {
         cout << pid << " is not exist!" << endl;
         return 0;
     }
-
+#endif
+    cputime = new CycleBuffer(BUFFLEN);
+    int pid = LISTENPID;
+    if (!pidExist(pid)) {
+        cout << pid << " is not exist!" << endl;
+        return 0;
+    }
     char filename[256];
     snprintf(filename, sizeof filename, "/proc/%d/stat", pid);
     int fd = open(filename, O_RDONLY);
@@ -96,7 +104,7 @@ int main(int argc, char *argv[]) {
     pthread_t produce_tid;
     pthread_create(&produce_tid, NULL, produce_thread, static_cast<void*>(&fd));
 
-    int work_num = 10;
+    int work_num = 2;
     FCGX_Init();
     pthread_t *work_tid = new pthread_t[work_num];
     for (int i = 0; i < work_num; ++i) {
@@ -104,10 +112,12 @@ int main(int argc, char *argv[]) {
         usleep(10);
     }
 
+    pthread_join(produce_tid, NULL);
     for (int i = 0; i < work_num; ++i) {
         pthread_join(work_tid[i], NULL);
     }
 
+    close(fd);
     delete[] work_tid;
     delete cputime;
     return 0;

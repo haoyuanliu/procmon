@@ -6,7 +6,11 @@ class CycleBuffer {
         CycleBuffer();
         CycleBuffer(int len);
         ~CycleBuffer();
+
         size_t getSize();
+        size_t getRead();
+        size_t getWrite();
+
         void write(double n);
     private:
         std::vector<double> buffer_;
