@@ -58,6 +58,36 @@ std::string Plot::plotCpu(const std::vector<double>& data) {
     return toPng();
 }
 
+std::string Plot::plotCpu(const std::vector<double>& data, int start, int len) {
+    gdImageFilledRectangle(image_, 0, 0, width_, height_, background_);
+    if (data.size() > 1) {
+        gdImageSetThickness(image_, 2);
+        double max = *std::max_element(data.begin(), data.end());
+        if (max >= 10.0) {
+            max = ceil(max);
+        } else {
+            max = std::max(0.1, ceil(max*10.0) / 10.0);
+        }
+        label(max);
+
+        for (size_t i = 0; i < data.size()-1; ++i) {
+            gdImageLine(image_,
+                  getX(i, data.size()),
+                  getY(data[(i+start)%len] / max),
+                  getX(i+1, data.size()),
+                  getY(data[(i+start+1)%len] / max),
+                  black_);
+        }
+    }
+
+    int total = totalSeconds_/samplingPeriod_;
+    gdImageSetThickness(image_, 1);
+    gdImageLine(image_, getX(0, total), getY(0)+2, getX(total, total), getY(0)+2, gray_);
+    gdImageLine(image_, getX(total, total), getY(0)+2, getX(total, total), getY(1)+2, gray_);
+    return toPng();
+}
+
+
 void Plot::label(double maxValue) {
     char buf[64];
     if (maxValue >= 10.0)

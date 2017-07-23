@@ -12,6 +12,7 @@ class Plot {
         Plot(int width, int height, int totalSeconds, int samplingPeriod);
         ~Plot();
         std::string plotCpu(const std::vector<double>& data);
+        std::string plotCpu(const std::vector<double>& data, int start, int len);
 
     private:
         std::string toPng();

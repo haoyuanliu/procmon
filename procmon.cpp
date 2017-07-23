@@ -24,7 +24,17 @@ using namespace std;
 //全局变量，保存buffer信息
 #define LISTENPID 4687
 #define BUFFLEN 600
-CycleBuffer *cputime;
+int g_clockTicks = static_cast<int>(::sysconf(_SC_CLK_TCK));
+int g_pageSize = static_cast<int>(::sysconf(_SC_PAGE_SIZE));
+CycleBuffer *cycle_buffer;
+
+struct CpuTime {
+    int userTime_;
+    int sysTime_;
+    double getCpuTime(double period, double ticksPerSecond) const {
+        return (userTime_ + sysTime_) / (ticksPerSecond * period);
+    }
+};
 
 void *produce_thread(void *arg) {
     int fd = *(static_cast<int*>(arg));
@@ -32,12 +42,16 @@ void *produce_thread(void *arg) {
     int ret;
     int count = 0;
     StatData stat_data;
+    StatData last_data;
     while(1) {
         if ((ret = pread(fd, buf, sizeof buf, 0)) == -1) {
             cout << "Read /proc/" << getpid() << "/stat error!" << endl;
         }
         stat_data.parse(buf);
-        cputime->write(static_cast<double>(stat_data.pid));
+        CpuTime time;
+        time.userTime_ = std::max(0, static_cast<int>(stat_data.utime - last_data.utime));
+        time.sysTime_ = std::max(0, static_cast<int>(stat_data.stime - last_data.stime));
+        cycle_buffer->write(static_cast<double>(time.getCpuTime(1, g_clockTicks)));
         sleep(1);
     }
 }
@@ -60,8 +74,8 @@ void *work_thread(void *arg) {
             response.append(" time of visit of thread " + Util::transToString(threadid) + " !<br>");
             response.append("And tid is " + Util::transToString(gettid()) + " !");
             response.append("Server Name: " + string(server_name));
-            response.append(" Buffer pointer: " + Util::transToString(cputime->getWriteIndex()));
-            response.append("<br>utime: " + Util::transToString(cputime->getValue(cputime->getWriteIndex()-1)));
+            response.append(" Buffer pointer: " + Util::transToString(cycle_buffer->getWriteIndex()));
+            response.append("<br>utime: " + Util::transToString(cycle_buffer->getValue(cputime->getWriteIndex()-1)));
             string httpRes("Status: 200 OK\r\nContent-type: text/html\r\n");
 			httpRes.append("Content-Length: ").append(Util::transToString(response.size()));
             httpRes.append("\r\n\r\n");
@@ -96,7 +110,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 #endif
-    cputime = new CycleBuffer(BUFFLEN);
+    cycle_buffer = new CycleBuffer(BUFFLEN);
     int pid = LISTENPID;
     if (!pidExist(pid)) {
         cout << pid << " is not exist!" << endl;
@@ -124,6 +138,6 @@ int main(int argc, char *argv[]) {
 
     close(fd);
     delete[] work_tid;
-    delete cputime;
+    delete cycle_buffer;
     return 0;
 }
