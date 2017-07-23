@@ -1,7 +1,7 @@
 #include "StatData.h"
 
 StatData::StatData() {
-    pthread_mutex_init(&mutex_);
+    pthread_mutex_init(&mutex_, NULL);
 }
 
 StatData::~StatData() {
