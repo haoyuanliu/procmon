@@ -3,6 +3,8 @@
 
 class StatData {
     public:
+        StatData();
+        ~StatData();
         void parse(const char* startStat);
         int pid;
         std::string command;
@@ -33,4 +35,6 @@ class StatData {
         long vsize;
         long rss;
         long rsslim;
+    private:
+        pthread_mutex_t mutex_;
 };
