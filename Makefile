@@ -1,4 +1,4 @@
-object=procmon.o CycleBuffer.o StatData.o
+object=procmon.o CycleBuffer.o StatData.o httpResponse.o TimeStamp.o
 target=procmon
 CXXFLAGS=-g
 GCC=g++ -g

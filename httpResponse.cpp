@@ -41,17 +41,17 @@ void httpResponse::appendBody(const char *fmt, ...) {
     body_.append(buf);
 }
 
-void appendTableRow(const char * name, int value) {
+void httpResponse::appendTableRow(const char * name, int value) {
     appendBody("<tr><td>%s</td><td>%d</td></tr>\n", name, value);
 }
 
-void appendTableRow(const char * name, long value) {
+void httpResponse::appendTableRow(const char * name, long value) {
     appendBody("<tr><td>%s</td><td>%ld</td></tr>\n", name, value);
 }
-void appendTableRow(const char * name, double value) {
+void httpResponse::appendTableRow(const char * name, double value) {
     appendBody("<tr><td>%s</td><td>%.2f</td></tr>\n", name, value);
 }
-void appendTableRow(const char * name, std::string value) {
-    appendBody("<tr><td>%s</td><td>%s</td></tr>\n", name, value);
+void httpResponse::appendTableRow(const char * name, std::string value) {
+    appendBody("<tr><td>%s</td><td>%s</td></tr>\n", name, value.c_str());
 }
 

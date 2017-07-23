@@ -19,6 +19,7 @@
 #include "util.h"
 #include "CycleBuffer.h"
 #include "httpResponse.h"
+#include "TimeStamp.h"
 using namespace std;
 
 //全局变量，保存buffer信息
@@ -69,6 +70,7 @@ void *work_thread(void *arg) {
             gettimeofday(&time, NULL);
             char *server_name;
             server_name = FCGX_GetParam("SERVER_NAME", httpReq.envp);
+#if 0
             string response("This is the ");
             response.append(Util::transToString(++count));
             response.append(" time of visit of thread " + Util::transToString(threadid) + " !<br>");
@@ -81,7 +83,20 @@ void *work_thread(void *arg) {
             httpRes.append("\r\n\r\n");
             httpRes.append(response);
             printf("%s\r\n", "Hello Nginx!");
-            FCGX_PutStr(httpRes.c_str(), httpRes.size(), httpReq.out);
+#endif
+            TimeStamp now = TimeStamp::now();
+            httpResponse httpRes;
+            httpRes.setStatus(httpResponse::k200Ok);
+            httpRes.setStatusStr("OK");
+            httpRes.setCloseConnection(false);
+            httpRes.setContentType("text/html");
+            httpRes.addHeader("test_key", "test_value");
+            httpRes.appendBody("<html><head><title>%s on %s</title>\n", "procmon", "kunto");
+            httpRes.appendBody("<h1>%s on %s</h1>\n", "procmon", "kunto");
+            httpRes.appendBody("<p>Page generated at %s (UTC)", now.toFormattedString().c_str());
+            httpRes.appendBody("</head></html>");
+            string response = httpRes.toString();
+            FCGX_PutStr(response.c_str(), response.size(), httpReq.out);
             FCGX_Finish_r(&httpReq);
         } else {
             break;

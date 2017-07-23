@@ -33,7 +33,7 @@ class httpResponse {
             body_ = body;
         }
         void appendBody(const std::string &str);
-        void appendBody(const char * fmt, ...) __attribute__ ((format (scanf, 2, 3)));
+        void appendBody(const char * fmt, ...);// __attribute__ ((format (scanf, 2, 3)));
         void appendTableRow(const char *name, int value);
         void appendTableRow(const char *name, long value);
         void appendTableRow(const char *name, double value);
