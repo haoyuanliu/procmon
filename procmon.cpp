@@ -61,7 +61,7 @@ void *work_thread(void *arg) {
             response.append("And tid is " + Util::transToString(gettid()) + " !");
             response.append("Server Name: " + string(server_name));
             response.append(" Buffer pointer: " + Util::transToString(cputime->getWriteIndex()));
-            response.append("<br>utime: " + Util::transToString(cputime->getValue(cputime->getWriteIndex())));
+            response.append("<br>utime: " + Util::transToString(cputime->getValue(cputime->getWriteIndex()-1)));
             string httpRes("Status: 200 OK\r\nContent-type: text/html\r\n");
 			httpRes.append("Content-Length: ").append(Util::transToString(response.size()));
             httpRes.append("\r\n\r\n");
