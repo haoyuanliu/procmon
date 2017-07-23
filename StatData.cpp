@@ -19,3 +19,18 @@ void StatData::parse(const char* startStat) {
     iss >> vsize >> rss >> rsslim;
     pthread_mutex_unlock(&mutex_);
 }
+
+std::string StatData::getState(const char stat) {
+    switch(stat) {
+        case 'R':
+            return "Running";
+        case 'S':
+            return "Sleeping";
+        case 'D':
+            return "Disk sleep";
+        case 'Z':
+            return "Zombie";
+        default:
+            return "Unknown";
+    }
+}

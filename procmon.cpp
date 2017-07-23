@@ -18,7 +18,7 @@
 
 #include "util.h"
 #include "CycleBuffer.h"
-#include "StatData.h"
+#include "httpResponse.h"
 using namespace std;
 
 //全局变量，保存buffer信息
@@ -82,6 +82,7 @@ bool pidExist(int pid) {
 }
 
 int main(int argc, char *argv[]) {
+    httpResponse test;
 #if 0
     if (argc < 3) {
         cout << "Usage: " << argv[0] << " pid port name" << endl;

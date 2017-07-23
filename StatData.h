@@ -6,6 +6,7 @@ class StatData {
         StatData();
         ~StatData();
         void parse(const char* startStat);
+        std::string getState(const char stat);
         int pid;
         std::string command;
         char state;
