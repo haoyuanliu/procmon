@@ -3,7 +3,7 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include <string>
-#define kMicroSecondsPerSecond 1000*1000
+static int kMicroSecondsPerSecond = 1000*1000;
 
 class TimeStamp {
     public:

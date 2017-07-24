@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
 #include <fcgi_stdio.h>
 #include <fcgi_config.h>
 #include <fcgio.h>
@@ -29,6 +30,12 @@ int g_clockTicks = static_cast<int>(::sysconf(_SC_CLK_TCK));
 int g_pageSize = static_cast<int>(::sysconf(_SC_PAGE_SIZE));
 CycleBuffer *cycle_buffer;
 
+struct ItemRequest {
+    string str_uri;
+    string str_uri_all;
+    string server_name;
+};
+
 struct CpuTime {
     int userTime_;
     int sysTime_;
@@ -36,6 +43,22 @@ struct CpuTime {
         return (userTime_ + sysTime_) / (ticksPerSecond * period);
     }
 };
+
+void getHttpRequest(FCGX_Request &fcgi_request, ItemRequest &item_request) {
+    char *arg_para;
+    arg_para = FCGX_GetParam("SERVER_NAME", fcgi_request.envp);
+    if ((arg_para != NULL) && strlen(arg_para) > 0) {
+        item_request.server_name.assign(arg_para);
+    }
+
+    arg_para = FCGX_GetParam("REQUEST_URI", fcgi_request.envp);
+    if ((arg_para != NULL) && strlen(arg_para) > 0) {
+        item_request.str_uri_all.assign(arg_para);
+        char *tmppos = strchr(arg_para, '?');
+        if (tmppos) *tmppos = 0;
+        item_request.str_uri.assign(arg_para);
+    }
+}
 
 void *produce_thread(void *arg) {
     int fd = *(static_cast<int*>(arg));
@@ -68,22 +91,16 @@ void *work_thread(void *arg) {
         if (ret >= 0) {
             struct timeval time;
             gettimeofday(&time, NULL);
-            char *server_name;
-            server_name = FCGX_GetParam("SERVER_NAME", httpReq.envp);
-#if 0
-            string response("This is the ");
-            response.append(Util::transToString(++count));
-            response.append(" time of visit of thread " + Util::transToString(threadid) + " !<br>");
-            response.append("And tid is " + Util::transToString(gettid()) + " !");
-            response.append("Server Name: " + string(server_name));
-            response.append(" Buffer pointer: " + Util::transToString(cycle_buffer->getWriteIndex()));
-            response.append("<br>utime: " + Util::transToString(cycle_buffer->getValue(cycle_buffer->getWriteIndex()-1)));
-            string httpRes("Status: 200 OK\r\nContent-type: text/html\r\n");
-			httpRes.append("Content-Length: ").append(Util::transToString(response.size()));
-            httpRes.append("\r\n\r\n");
-            httpRes.append(response);
-            printf("%s\r\n", "Hello Nginx!");
-#endif
+
+            ItemRequest item_request;
+            getHttpRequest(httpReq, item_request);
+
+            if ("/procmon" == item_request.str_uri) {
+
+            } else if ("/procmon/cpu.png") {
+
+            }
+
             TimeStamp now = TimeStamp::now();
             httpResponse httpRes;
             httpRes.setStatus(httpResponse::k200Ok);
@@ -94,6 +111,8 @@ void *work_thread(void *arg) {
             httpRes.appendBody("<html><head><title>%s on %s</title>\n", "procmon", "kunto");
             httpRes.appendBody("<h1>%s on %s</h1>\n", "procmon", "kunto");
             httpRes.appendBody("<p>Page generated at %s (UTC)", now.toFormattedString().c_str());
+            httpRes.appendBody("<p>Request URI ALL is: %s", item_request.str_uri_all.c_str());
+            httpRes.appendBody("<p>Request URI is: %s", item_request.str_uri.c_str());
             httpRes.appendBody("</head></html>");
             string response = httpRes.toString();
             FCGX_PutStr(response.c_str(), response.size(), httpReq.out);
