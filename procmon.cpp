@@ -21,6 +21,7 @@
 #include "CycleBuffer.h"
 #include "httpResponse.h"
 #include "TimeStamp.h"
+#include "plot.h"
 using namespace std;
 
 //全局变量，保存buffer信息
@@ -60,7 +61,7 @@ void getHttpRequest(FCGX_Request &fcgi_request, ItemRequest &item_request) {
     }
 }
 
-void fillProcmon(httpResponse &http_res) {
+void fillProcmon(httpResponse &http_res, const ItemRequest item_request) {
     TimeStamp now = TimeStamp::now();
     http_res.setStatus(httpResponse::k200Ok);
     http_res.setStatusStr("OK");
@@ -74,20 +75,20 @@ void fillProcmon(httpResponse &http_res) {
     http_res.appendBody("<a href=\"?refresh=5\">5s</a> ");
     http_res.appendBody("<a href=\"?refresh=15\">15s</a> ");
     http_res.appendBody("<a href=\"?refresh=60\">60s</a>\n");
-    
+
     http_res.appendBody("<p>Page generated at %s (UTC)", now.toFormattedString().c_str());
     http_res.appendBody("<p>Request URI ALL is: %s", item_request.str_uri_all.c_str());
     http_res.appendBody("<p>Request URI is: %s", item_request.str_uri.c_str());
     http_res.appendBody("</head></html>");
 }
 
-void fillCpuPng(httpResponse &http_res) {
+void fillCpuPng(httpResponse &http_res, Plot &plot) {
     TimeStamp now = TimeStamp::now();
     http_res.setStatus(httpResponse::k200Ok);
     http_res.setStatusStr("OK");
     http_res.setCloseConnection(false);
     http_res.setContentType("image/png");
-    string png = plot.plotCpu(cycle_buffer.getBuffer());
+    string png = plot.plotCpu(cycle_buffer->getBuffer());
     http_res.appendBody(png);
 }
 
@@ -129,14 +130,14 @@ void *work_thread(void *arg) {
             getHttpRequest(httpReq, item_request);
             httpResponse http_res;
 
-            if ("/procmon" == item_request.str_uri) {                
-                fillProcmon(http_res);
+            if ("/procmon" == item_request.str_uri) {
+                fillProcmon(http_res, item_request);
             } else if ("/procmon/cpu.png") {
-                fillCpuPng(http_res);
+                fillCpuPng(http_res, plot);
             }
-            
+
             string response = http_res.toString();
-            
+
             FCGX_PutStr(response.c_str(), response.size(), httpReq.out);
             FCGX_Finish_r(&httpReq);
         } else {
