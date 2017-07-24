@@ -79,6 +79,13 @@ void fillProcmon(httpResponse &http_res, const ItemRequest item_request) {
     http_res.appendBody("<p>Page generated at %s (UTC)", now.toFormattedString().c_str());
     http_res.appendBody("<p>Request URI ALL is: %s", item_request.str_uri_all.c_str());
     http_res.appendBody("<p>Request URI is: %s", item_request.str_uri.c_str());
+
+    http_res.appendBody("<p><table>");
+    http_res.appendTableRow("PID", 22222);
+    http_res.appendTableRow("Start at", now.toFormattedString().c_str());
+    http_res.appendTableRow("CPU usage", "<img src=\"/procmon/cpu.png\" height=\"100\" width=\"640\">");
+    http_res.appendBody("</table>");
+
     http_res.appendBody("</head></html>");
 }
 
