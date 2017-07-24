@@ -60,3 +60,11 @@ void CycleBuffer::write(double n) {
     }
     pthread_mutex_unlock(&mutex_);
 }
+
+std::vector<double> CycleBuffer::getBuffer() {
+    pthread_mutex_lock(&mutex_);
+    std::vector<double> res(buffer_.begin(), buffer_.end());
+    pthread_mutex_unlock(&mutex_);
+    return std::moved(res);
+}
+

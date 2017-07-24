@@ -12,6 +12,7 @@ class CycleBuffer {
         size_t getWriteIndex();
         size_t getCount();
         double getValue(size_t index);
+        std::vector<double> getBuffer();
 
         void write(double n);
     private:

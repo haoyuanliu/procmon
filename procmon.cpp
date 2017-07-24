@@ -60,6 +60,38 @@ void getHttpRequest(FCGX_Request &fcgi_request, ItemRequest &item_request) {
     }
 }
 
+void fillProcmon(httpResponse &http_res) {
+    TimeStamp now = TimeStamp::now();
+    http_res.setStatus(httpResponse::k200Ok);
+    http_res.setStatusStr("OK");
+    http_res.setCloseConnection(false);
+    http_res.setContentType("text/html");
+    http_res.appendBody("<html><head><title>%s on %s</title>\n", "procmon", "kunto");
+    http_res.appendBody("<h1>%s on %s</h1>\n", "procmon", "localhost");
+
+    http_res.appendBody("<p>Refresh <a href=\"?refresh=1\">1s</a> ");
+    http_res.appendBody("<a href=\"?refresh=2\">2s</a> ");
+    http_res.appendBody("<a href=\"?refresh=5\">5s</a> ");
+    http_res.appendBody("<a href=\"?refresh=15\">15s</a> ");
+    http_res.appendBody("<a href=\"?refresh=60\">60s</a>\n");
+    
+    http_res.appendBody("<p>Page generated at %s (UTC)", now.toFormattedString().c_str());
+    http_res.appendBody("<p>Request URI ALL is: %s", item_request.str_uri_all.c_str());
+    http_res.appendBody("<p>Request URI is: %s", item_request.str_uri.c_str());
+    http_res.appendBody("</head></html>");
+}
+
+void fillCpuPng(httpResponse &http_res) {
+    TimeStamp now = TimeStamp::now();
+    http_res.setStatus(httpResponse::k200Ok);
+    http_res.setStatusStr("OK");
+    http_res.setCloseConnection(false);
+    http_res.setContentType("image/png");
+    string png = plot.plotCpu(cycle_buffer.getBuffer());
+    http_res.appendBody(png);
+}
+
+
 void *produce_thread(void *arg) {
     int fd = *(static_cast<int*>(arg));
     char buf[1024];
@@ -85,6 +117,7 @@ void *work_thread(void *arg) {
     int ret = 0;
     int count= 0;
     FCGX_Request httpReq;
+    Plot plot(640, 100, 600, 1);
     FCGX_InitRequest(&httpReq, 0, 0);
     while(1) {
         ret = FCGX_Accept_r(&httpReq);
@@ -94,27 +127,16 @@ void *work_thread(void *arg) {
 
             ItemRequest item_request;
             getHttpRequest(httpReq, item_request);
+            httpResponse http_res;
 
-            if ("/procmon" == item_request.str_uri) {
-
+            if ("/procmon" == item_request.str_uri) {                
+                fillProcmon(http_res);
             } else if ("/procmon/cpu.png") {
-
+                fillCpuPng(http_res);
             }
-
-            TimeStamp now = TimeStamp::now();
-            httpResponse httpRes;
-            httpRes.setStatus(httpResponse::k200Ok);
-            httpRes.setStatusStr("OK");
-            httpRes.setCloseConnection(false);
-            httpRes.setContentType("text/html");
-            httpRes.addHeader("test_key", "test_value");
-            httpRes.appendBody("<html><head><title>%s on %s</title>\n", "procmon", "kunto");
-            httpRes.appendBody("<h1>%s on %s</h1>\n", "procmon", "kunto");
-            httpRes.appendBody("<p>Page generated at %s (UTC)", now.toFormattedString().c_str());
-            httpRes.appendBody("<p>Request URI ALL is: %s", item_request.str_uri_all.c_str());
-            httpRes.appendBody("<p>Request URI is: %s", item_request.str_uri.c_str());
-            httpRes.appendBody("</head></html>");
-            string response = httpRes.toString();
+            
+            string response = http_res.toString();
+            
             FCGX_PutStr(response.c_str(), response.size(), httpReq.out);
             FCGX_Finish_r(&httpReq);
         } else {
