@@ -25,7 +25,7 @@
 using namespace std;
 
 //全局变量，保存buffer信息
-#define LISTENPID 4687
+#define LISTENPID 7
 #define BUFFLEN 600
 int g_clockTicks = static_cast<int>(::sysconf(_SC_CLK_TCK));
 int g_pageSize = static_cast<int>(::sysconf(_SC_PAGE_SIZE));
@@ -101,14 +101,14 @@ void fillProcmon(httpResponse &http_res, const ItemRequest item_request) {
     http_res.appendBody("<a href=\"?refresh=15\">15s</a> ");
     http_res.appendBody("<a href=\"?refresh=60\">60s</a>\n");
 
-    http_res.appendBody("<p>Page generated at %s (UTC)", now.toFormattedString().c_str());
+    http_res.appendBody("<p>Page generated at %s", now.toFormattedString(false).c_str());
     http_res.appendBody("<p>Request URI ALL is: %s", item_request.str_uri_all.c_str());
     http_res.appendBody("<p>Request URI is: %s", item_request.str_uri.c_str());
     http_res.appendBody("<p>Refresh time is: %s", item_request.str_refresh.c_str());
 
     http_res.appendBody("<p><table>");
     http_res.appendTableRow("PID", 22222);
-    http_res.appendTableRow("Start at", now.toFormattedString().c_str());
+    http_res.appendTableRow("Start at", now.toFormattedString(false).c_str());
     http_res.appendTableRow("CPU usage", "<img src=\"/procmon/cpu.png\" height=\"100\" width=\"640\">");
     http_res.appendBody("</table>");
 
@@ -138,10 +138,12 @@ void *produce_thread(void *arg) {
             cout << "Read /proc/" << getpid() << "/stat error!" << endl;
         }
         stat_data.parse(buf);
+        if (count == 0) last_data = stat_data;
         CpuTime time;
         time.userTime_ = std::max(0, static_cast<int>(stat_data.utime - last_data.utime));
         time.sysTime_ = std::max(0, static_cast<int>(stat_data.stime - last_data.stime));
         cycle_buffer->write(static_cast<double>(time.getCpuTime(1, g_clockTicks)));
+        last_data = stat_data;
         sleep(1);
     }
 }
@@ -187,20 +189,6 @@ bool pidExist(int pid) {
 }
 
 int main(int argc, char *argv[]) {
-    httpResponse test;
-#if 0
-    if (argc < 3) {
-        cout << "Usage: " << argv[0] << " pid port name" << endl;
-        return 0;
-    }
-
-
-    int pid = atoi(argv[1]);
-    if (!pidExist(pid)) {
-        cout << pid << " is not exist!" << endl;
-        return 0;
-    }
-#endif
     cycle_buffer = new CycleBuffer(BUFFLEN);
     int pid = LISTENPID;
     if (!pidExist(pid)) {

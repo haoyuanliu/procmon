@@ -6,7 +6,6 @@ std::string TimeStamp::toString() {
     int64_t seconds = microSecondsSinceEpoch_ / kMicroSecondsPerSecond;
     int64_t microSeconds = microSecondsSinceEpoch_ % kMicroSecondsPerSecond;
     snprintf(buf, sizeof(buf)-1, "%" PRId64 ".%06" PRId64 "", seconds, microSeconds);
-    //snprintf(buf, sizeof(buf)-1, "%lld %lld", seconds, microSeconds);
     return std::string(buf);
 }
 
@@ -21,7 +20,7 @@ std::string TimeStamp::toFormattedString(bool showMicroSeconds) {
     char buf[32] = {0};
     time_t seconds = static_cast<time_t>(microSecondsSinceEpoch_ / kMicroSecondsPerSecond);
     struct tm tm_time;
-    gmtime_r(&seconds, &tm_time);
+    localtime_r(&seconds, &tm_time);
 
     if (showMicroSeconds) {
         int microSeconds = static_cast<int>(microSecondsSinceEpoch_ % kMicroSecondsPerSecond);
