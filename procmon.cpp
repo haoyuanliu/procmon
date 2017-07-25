@@ -35,6 +35,8 @@ struct ItemRequest {
     string str_uri;
     string str_uri_all;
     string server_name;
+    string str_refresh;
+    int32_t i32_refresh;
 };
 
 struct CpuTime {
@@ -44,6 +46,14 @@ struct CpuTime {
         return (userTime_ + sysTime_) / (ticksPerSecond * period);
     }
 };
+
+void initItemReqest(ItemRequest &item_request) {
+    item_request.str_uri = "";
+    item_request.str_uri_all = "";
+    item_request.server_name = "";
+    item_request.str_refresh = "";
+    item_request.i32_refresh = 0;
+}
 
 void getHttpRequest(FCGX_Request &fcgi_request, ItemRequest &item_request) {
     char *arg_para;
@@ -59,6 +69,18 @@ void getHttpRequest(FCGX_Request &fcgi_request, ItemRequest &item_request) {
         if (tmppos) *tmppos = 0;
         item_request.str_uri.assign(arg_para);
     }
+
+    arg_para = FCGX_GetParam("ARG_REFRESH", fcgi_request.envp);
+    if ((arg_para != NULL) && strlen(arg_para) > 0) {
+        item_request.str_refresh.assign(arg_para);
+        item_request.i32_refresh = atoi(arg_para);
+    }
+}
+
+void fillRefresh(httpResponse &http_res, int refresh) {
+    if (refresh > 0) {
+        http_res.appendBody("<meta http-equiv=\"refresh\" content=\"%d\">\n", refresh);
+    }
 }
 
 void fillProcmon(httpResponse &http_res, const ItemRequest item_request) {
@@ -68,6 +90,9 @@ void fillProcmon(httpResponse &http_res, const ItemRequest item_request) {
     http_res.setCloseConnection(false);
     http_res.setContentType("text/html");
     http_res.appendBody("<html><head><title>%s on %s</title>\n", "procmon", "kunto");
+
+    if (item_request.i32_refresh > 0)
+        fillRefresh(http_res, item_request.i32_refresh);
     http_res.appendBody("<h1>%s on %s</h1>\n", "procmon", "localhost");
 
     http_res.appendBody("<p>Refresh <a href=\"?refresh=1\">1s</a> ");
@@ -79,6 +104,7 @@ void fillProcmon(httpResponse &http_res, const ItemRequest item_request) {
     http_res.appendBody("<p>Page generated at %s (UTC)", now.toFormattedString().c_str());
     http_res.appendBody("<p>Request URI ALL is: %s", item_request.str_uri_all.c_str());
     http_res.appendBody("<p>Request URI is: %s", item_request.str_uri.c_str());
+    http_res.appendBody("<p>Refresh time is: %s", item_request.str_refresh.c_str());
 
     http_res.appendBody("<p><table>");
     http_res.appendTableRow("PID", 22222);
@@ -134,9 +160,10 @@ void *work_thread(void *arg) {
             gettimeofday(&time, NULL);
 
             ItemRequest item_request;
+            initItemReqest(item_request);
             getHttpRequest(httpReq, item_request);
-            httpResponse http_res;
 
+            httpResponse http_res;
             if ("/procmon" == item_request.str_uri) {
                 fillProcmon(http_res, item_request);
             } else if ("/procmon/cpu.png") {

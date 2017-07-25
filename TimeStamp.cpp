@@ -1,11 +1,12 @@
 #include "TimeStamp.h"
+#include <cinttypes>
 
 std::string TimeStamp::toString() {
     char buf[32] = {0};
     int64_t seconds = microSecondsSinceEpoch_ / kMicroSecondsPerSecond;
     int64_t microSeconds = microSecondsSinceEpoch_ % kMicroSecondsPerSecond;
-    //snprintf(buf, sizeof(buf)-1, "%" PRId64 ".%06" PRId64 "", seconds, microSeconds);
-    snprintf(buf, sizeof(buf)-1, "%lld %lld", seconds, microSeconds);
+    snprintf(buf, sizeof(buf)-1, "%" PRId64 ".%06" PRId64 "", seconds, microSeconds);
+    //snprintf(buf, sizeof(buf)-1, "%lld %lld", seconds, microSeconds);
     return std::string(buf);
 }
 
