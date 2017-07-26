@@ -138,7 +138,7 @@ void *produce_thread(void *arg) {
             cout << "Read /proc/" << getpid() << "/stat error!" << endl;
         }
         stat_data.parse(buf);
-        if (count == 0) last_data = stat_data;
+        if (count++ == 0) last_data = stat_data;
         CpuTime time;
         time.userTime_ = std::max(0, static_cast<int>(stat_data.utime - last_data.utime));
         time.sysTime_ = std::max(0, static_cast<int>(stat_data.stime - last_data.stime));

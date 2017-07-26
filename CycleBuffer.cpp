@@ -63,7 +63,10 @@ void CycleBuffer::write(double n) {
 
 std::vector<double> CycleBuffer::getBuffer() {
     pthread_mutex_lock(&mutex_);
-    std::vector<double> res(buffer_.begin(), buffer_.end());
+    std::vector<double> res(buffer_.size(), 0);
+    for (int i = 0; i < buffer_.size(); ++i) {
+        res[i] = buffer_[(writeIndex_+i) % buffer_.size()];
+    }
     pthread_mutex_unlock(&mutex_);
     return std::move(res);
 }
