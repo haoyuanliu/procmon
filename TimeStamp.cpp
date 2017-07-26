@@ -41,16 +41,6 @@ int64_t TimeStamp::getSeconds() {
     return microSecondsSinceEpoch_ / kMicroSecondsPerSecond;
 }
 
-int64_t TimeStamp::getMicroSeconds() {
+int64_t TimeStamp::getMicroSecondsSinceEpoch() {
     return microSecondsSinceEpoch_;
-}
-
-TimeStamp TimeStamp::addTime(TimeStamp time, double seconds) {
-    int64_t delta = static_cast<int64_t>(seconds * kMicroSecondsPerSecond);
-    return TimeStamp(time.getMicroSeconds() + delta);
-}
-
-double TimeStamp::timeDiff(TimeStamp high, TimeStamp low) {
-    int64_t diff = high.getMicroSeconds() - low.getMicroSeconds();
-    return static_cast<double>(diff / kMicroSecondsPerSecond);
 }

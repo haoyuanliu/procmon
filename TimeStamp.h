@@ -13,9 +13,15 @@ class TimeStamp {
         std::string toString();
         std::string toFormattedString(bool showMicroSeconds = true);
         int64_t getSeconds();
-        int64_t getMicroSeconds();
-        TimeStamp addTime(TimeStamp time, double seconds);
-        double timeDiff(TimeStamp high, TimeStamp low);
+        int64_t getMicroSecondsSinceEpoch();
     private:
         int64_t microSecondsSinceEpoch_;
 };
+inline TimeStamp addTime(TimeStamp time, double seconds) {
+    int64_t delta = static_cast<int64_t>(seconds * kMicroSecondsPerSecond);
+    return TimeStamp(time.getMicroSecondsSinceEpoch() + delta);
+}
+inline double timeDiff(TimeStamp high, TimeStamp low) {
+    int64_t diff = high.getMicroSecondsSinceEpoch() - low.getMicroSecondsSinceEpoch();
+    return static_cast<double>(diff) / kMicroSecondsPerSecond;
+}

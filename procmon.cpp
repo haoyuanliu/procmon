@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <fstream>
 #include <pthread.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -25,11 +26,18 @@
 using namespace std;
 
 //全局变量，保存buffer信息
-#define LISTENPID 7
 #define BUFFLEN 600
+int LISTENPID;
 int g_clockTicks = static_cast<int>(::sysconf(_SC_CLK_TCK));
 int g_pageSize = static_cast<int>(::sysconf(_SC_PAGE_SIZE));
 CycleBuffer *cycle_buffer;
+
+void getListenPid() {
+    ifstream ifs("./pid.txt");
+    string pid;
+    getline(ifs, pid);
+    LISTENPID = atoi(pid.c_str());
+}
 
 struct ItemRequest {
     string str_uri;
@@ -189,6 +197,7 @@ bool pidExist(int pid) {
 }
 
 int main(int argc, char *argv[]) {
+    getListenPid();
     cycle_buffer = new CycleBuffer(BUFFLEN);
     int pid = LISTENPID;
     if (!pidExist(pid)) {
