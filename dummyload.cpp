@@ -64,8 +64,8 @@ void fixed(){
 
 void cosine() {
     while(true){
-        for (int i = 0; i < 200; ++i) {
-            int percent = static_cast<int>((1.0 + cos(i * 3.1415926 / 100)) / 2 * g_percent + 0.5);
+        for (int i = 0; i < 100; ++i) {
+            int percent = static_cast<int>((1.0 + cos(i * 3.1415926 / 50)) / 2 * g_percent + 0.5);
             load(percent);
         }
     }
