@@ -115,7 +115,7 @@ void fillProcmon(httpResponse &http_res, const ItemRequest item_request) {
     http_res.appendBody("<p>Refresh time is: %s", item_request.str_refresh.c_str());
 
     http_res.appendBody("<p><table>");
-    http_res.appendTableRow("PID", 22222);
+    http_res.appendTableRow("PID", LISTENPID);
     http_res.appendTableRow("Start at", now.toFormattedString(false).c_str());
     http_res.appendTableRow("CPU usage", "<img src=\"/procmon/cpu.png\" height=\"100\" width=\"640\">");
     http_res.appendBody("</table>");

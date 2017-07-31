@@ -80,6 +80,32 @@ void sawtooth() {
     }
 }
 
+void square() {
+    while(true) {
+        for (int i = 0; i < 100; ++i) {
+            load(g_percent);
+        }
+        for (int i = 0; i < 100; ++i) {
+            load(0);
+        }
+    }
+}
+
+void triangular() {
+    int percent;
+    while(true) {
+        for (int i = 0; i < 100; ++i) {
+            percent = static_cast<int>(i / 100.0 * g_percent);
+            load(percent);
+        }
+
+        for (int i = 0; i < 100; ++i) {
+            percent = static_cast<int>(g_percent - i / 100.0 * g_percent);
+            load(percent);
+        }
+    }
+}
+
 
 double getSeconds(int cycles) {
     TimeStamp start = TimeStamp::now();
@@ -115,6 +141,12 @@ int main(int argc, char *argv[]) {
             break;
         case 'z':
             sawtooth();
+            break;
+        case 's':
+            square();
+            break;
+        case 't':
+            triangular();
             break;
         default:
             break;
