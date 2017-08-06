@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 killall ./dummyload
 killall procmon
 ./dummyload s 60 1 > pid.txt &
