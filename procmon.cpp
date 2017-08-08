@@ -144,6 +144,7 @@ void *produce_thread(void *arg) {
     while(1) {
         if ((ret = pread(fd, buf, sizeof buf, 0)) == -1) {
             cout << "Read /proc/" << getpid() << "/stat error!" << endl;
+            continue;
         }
         stat_data.parse(buf);
         if (count++ == 0) last_data = stat_data;
